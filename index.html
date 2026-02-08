@@ -122,7 +122,7 @@
             border: 2px solid var(--accent-color);
             border-radius: 8px;
             display: inline-block;
-            min-height: 100px;
+            min-height: 150px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -150,6 +150,16 @@
         .glowing-title {
             text-shadow: 0 0 8px var(--glow-color), 0 0 12px var(--glow-color);
         }
+        
+        .info-box {
+            font-size: 0.9em;
+            color: var(--accent-color);
+            background-color: #fffcf2;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #c9b79c;
+            margin-top: 1em;
+        }
 
         @media (max-width: 1200px) {
             .container { grid-template-columns: 1fr; }
@@ -163,12 +173,12 @@
         <div class="panel editor-panel">
             <h1>Магический QR</h1>
             <div class="form-group">
-                <label for="genially-url">Ссылка на вашу игру Genially:</label>
+                <label for="genially-url">1. Ссылка на вашу игру Genially:</label>
                 <input type="text" id="genially-url" placeholder="https://view.genial.ly/...">
             </div>
 
             <div class="form-group">
-                <label for="avatar-upload">Загрузите Аватар (PNG/JPG):</label>
+                <label for="avatar-upload">2. Загрузите Аватар (PNG/JPG):</label>
                 <div class="file-upload-wrapper">
                     <label for="avatar-upload" class="file-upload-label">Выбрать изображение</label>
                     <input type="file" id="avatar-upload" accept="image/png, image/jpeg">
@@ -177,12 +187,15 @@
             </div>
 
             <div class="form-group">
-                <label for="audio-upload">Загрузите Приветствие (MP3/WAV):</label>
+                <label for="audio-upload">3. Загрузите Приветствие (MP3):</label>
                 <div class="file-upload-wrapper">
                     <label for="audio-upload" class="file-upload-label">Выбрать аудиофайл</label>
-                    <input type="file" id="audio-upload" accept="audio/mpeg, audio/wav">
+                    <input type="file" id="audio-upload" accept="audio/mpeg">
                 </div>
                 <div id="file-name-audio">Файл не выбран</div>
+                 <div class="info-box">
+                    <strong>Важно:</strong> Используйте небольшие файлы (картинка до 200Кб, аудио до 5-10 сек), чтобы QR-код легко сканировался.
+                </div>
             </div>
 
             <div class="qr-container">
@@ -206,6 +219,9 @@
     const qrcodeContainer = document.getElementById('qrcode');
     const downloadLink = document.getElementById('download-qr');
 
+    // Ссылка на универсальный "плеер", который будет отображать приветствие
+    const PLAYER_URL = "https://gist.githack.com/TheGreatUser/1f692055117498369399e71b12b54203/raw/magic-qr-player.html";
+
     let state = {
         geniallyUrl: '',
         avatarDataUrl: '',
@@ -218,48 +234,33 @@
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
             updatePreviewAndQr();
-        }, 500); // Wait 500ms after user stops typing/uploading
+        }, 500);
     }
 
     function updatePreviewAndQr() {
-        const { geniallyUrl, avatarDataUrl, audioDataUrl } = state;
-
-        const htmlContent = `
-            <!DOCTYPE html>
-            <html lang="ru">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
-                    body { margin: 0; background: #4a4e3b; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; overflow: hidden; }
-                    .welcome-card { background: #f5eeda; padding: 2em; border-radius: 15px; text-align: center; max-width: 90%; animation: fadeIn 1s ease-in-out; }
-                    .avatar { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 5px solid #7a5c3e; margin-bottom: 1em; }
-                    .message { font-size: 1.2em; color: #3d2b1f; }
-                    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-                </style>
-            </head>
-            <body>
-                <div class="welcome-card">
-                    ${avatarDataUrl ? `<img src="${avatarDataUrl}" alt="Аватар" class="avatar">` : ''}
-                    <p class="message">Загрузка приключения...</p>
-                    ${audioDataUrl ? `<audio id="welcome-audio" src="${audioDataUrl}" autoplay></audio>` : ''}
-                </div>
-                <script>
-                    setTimeout(() => {
-                        window.location.href = "${geniallyUrl}";
-                    }, 4000); // Задержка 4 секунды перед переадресацией
-                <\/script>
-            </body>
-            </html>
-        `;
-
-        if (!geniallyUrl) {
+        if (!state.geniallyUrl) {
             previewIframe.srcdoc = `<div style="text-align:center; padding: 2em; font-family: 'Cormorant Garamond', serif;">Введите ссылку на игру, чтобы начать</div>`;
-        } else {
-             previewIframe.srcdoc = htmlContent;
+            qrcodeContainer.innerHTML = 'Введите ссылку на игру';
+            downloadLink.style.display = 'none';
+            return;
         }
-       
-        generateQrCode(htmlContent);
+        
+        // 1. Создаем объект с данными
+        const payload = {
+            g: state.geniallyUrl,
+            a: state.avatarDataUrl,
+            s: state.audioDataUrl
+        };
+
+        // 2. Превращаем объект в строку JSON, затем кодируем в Base64, чтобы безопасно передать в URL
+        const encodedPayload = btoa(JSON.stringify(payload));
+        
+        // 3. Создаем финальную ссылку, добавляя закодированные данные после #
+        const finalUrl = PLAYER_URL + '#' + encodedPayload;
+
+        // 4. Обновляем предпросмотр и генерируем QR-код
+        previewIframe.src = finalUrl;
+        renderQrToContainer(finalUrl);
     }
     
     function handleFileUpload(file, type) {
@@ -272,50 +273,17 @@
                 document.getElementById('file-name-avatar').textContent = file.name;
             } else if (type === 'audio') {
                 state.audioDataUrl = e.target.result;
-                 document.getElementById('file-name-audio').textContent = file.name;
+                document.getElementById('file-name-audio').textContent = file.name;
             }
             debouncedUpdate();
         };
         reader.readAsDataURL(file);
     }
     
-    // --- ПОЛНОСТЬЮ ПЕРЕПИСАННАЯ ФУНКЦИЯ ГЕНЕРАЦИИ QR-КОДА ---
-    function generateQrCode(htmlContent) {
-        const { geniallyUrl } = state;
-        if (!geniallyUrl) {
-            qrcodeContainer.innerHTML = 'Введите ссылку на игру';
-            downloadLink.style.display = 'none';
-            return;
-        }
-
-        qrcodeContainer.innerHTML = 'Генерация...';
-
-        try {
-            // 1. Кодируем весь HTML-код для безопасной передачи в URL
-            const encodedHtml = encodeURIComponent(htmlContent);
-            const dataUrl = `data:text/html;charset=utf-8,${encodedHtml}`;
-
-            // 2. Предупреждение о длине, если она становится слишком большой
-            if (dataUrl.length > 4000) {
-                 console.warn(`ВНИМАНИЕ: Сгенерированный URL очень длинный (${dataUrl.length} символов). QR-код может быть сложным для сканирования. Рекомендуется использовать файлы меньшего размера.`);
-                 qrcodeContainer.innerHTML = 'QR-код слишком плотный. Используйте файлы меньшего размера.';
-                 return;
-            }
-            
-            // 3. Передаем готовый URL в функцию рендеринга QR-кода
-            renderQrToContainer(dataUrl);
-
-        } catch (err) {
-            console.error('Ошибка при создании Data URL:', err);
-            qrcodeContainer.innerHTML = 'Ошибка кодирования данных.';
-            downloadLink.style.display = 'none';
-        }
-    }
-    
     function renderQrToContainer(url){
         qrcodeContainer.innerHTML = '';
         const typeNumber = 0; // auto
-        const errorCorrectionLevel = 'H'; // 'H' for high - лучше для плотных кодов
+        const errorCorrectionLevel = 'M'; // Medium, хороший баланс
         const qr = qrcode(typeNumber, errorCorrectionLevel);
         
         try {
