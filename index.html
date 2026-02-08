@@ -7,38 +7,39 @@
     <!-- Подключаем шрифты -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=Cormorant+Garamond:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <!-- Библиотека для генерации QR -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
     <style>
         :root {
-            --bg-color: #4a4e3b;
-            --panel-bg: #f5eeda;
-            --text-color: #3d2b1f;
-            --title-color: #5c4033;
-            --accent-color: #7a5c3e;
-            --glow-color: #ffee77;
-            --button-color: #5c4033;
+            --bg-color: #1a2a2a;
+            --panel-bg: #2d4a4a;
+            --text-color: #e0f2f1;
+            --title-color: #a7ffeb;
+            --accent-color: #64ffda;
+            --border-color: #004d40;
+            --hover-bg-color: #375a5a;
+        }
+        * {
+            box-sizing: border-box;
         }
         body {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: 'Roboto', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 2em;
-            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             transition: background-color 0.5s;
         }
 
         /* --- Стили для режима ПЛЕЕРА --- */
         body.player-mode {
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            overflow: hidden;
+            background-color: #e0f2f1;
         }
         #player-view {
             text-align: center;
@@ -53,9 +54,9 @@
             margin-bottom: 20px;
         }
         .loader {
-          border: 8px solid #f3f3f3;
+          border: 8px solid #b2dfdb;
           border-radius: 50%;
-          border-top: 8px solid #3498db;
+          border-top: 8px solid var(--accent-color);
           width: 60px;
           height: 60px;
           animation: spin 2s linear infinite;
@@ -66,322 +67,143 @@
         }
 
         /* --- Стили для режима ГЕНЕРАТОРА --- */
-        #generator-view .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 450px 1fr;
-            gap: 2em;
-            align-items: flex-start;
+        .editor-wrapper {
+            width: 90vw;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        #generator-view .panel {
+        .editor-container {
+            width: 100%;
+            height: 100%;
             background-color: var(--panel-bg);
+            border-radius: 20px;
+            border: 3px solid var(--border-color);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.3);
             padding: 2em;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 0 15px rgba(0,0,0,0.2);
-            border: 2px solid #c9b79c;
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 2em;
+            overflow: auto;
         }
-        #generator-view h1, #generator-view h2 {
-            font-family: 'Marck Script', cursive;
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5em;
+        }
+        h1 {
+            font-family: 'Lobster', cursive;
             color: var(--title-color);
             text-align: center;
-            margin-top: 0;
-            font-size: 2.8em;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+            margin: 0 0 1em 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
         }
-        #generator-view h2 { font-size: 2.2em; }
-        #generator-view .form-group { margin-bottom: 1.5em; }
-        #generator-view label {
+        .form-group {
+            background-color: rgba(0,0,0,0.1);
+            padding: 1em;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        /* Подсветка при наведении */
+        .form-group:hover {
+            background-color: var(--hover-bg-color);
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(100, 255, 218, 0.2);
+        }
+        label {
             font-weight: 700;
             display: block;
-            margin-bottom: 0.5em;
+            margin-bottom: 0.8em;
+            color: var(--accent-color);
         }
-        #generator-view input[type="text"] {
-            width: calc(100% - 20px);
+        input[type="text"], textarea, select {
+            width: 100%;
             padding: 10px;
-            border: 1px solid #c9b79c;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
-            background-color: #fffcf2;
-            font-family: 'Cormorant Garamond', serif;
+            background-color: #1a2a2a;
+            color: var(--text-color);
+            font-family: 'Roboto', sans-serif;
             font-size: 1em;
         }
-        #generator-view .file-upload-label {
-            display: block;
-            padding: 12px 20px;
-            background-color: var(--accent-color);
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: center;
-            transition: background-color 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        textarea {
+            resize: vertical;
+            min-height: 80px;
         }
-        #generator-view .file-upload-label:hover { background-color: #634b33; }
-        #generator-view input[type="file"] { display: none; }
-        #generator-view #generate-qr-btn {
+        .custom-button, .file-upload-label {
             display: block;
             width: 100%;
-            padding: 15px;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.2em;
+            padding: 12px;
+            font-size: 1.1em;
             font-weight: 700;
-            background-color: var(--button-color);
-            color: white;
+            background: linear-gradient(45deg, var(--accent-color), #26a69a);
+            color: #111;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 1.5em;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            text-align: center;
             transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
-        #generator-view #generate-qr-btn:hover {
-            background-color: #4a3328;
+        .custom-button:hover, .file-upload-label:hover {
             transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+            filter: brightness(1.1);
         }
-        #generator-view #file-name-avatar, #generator-view #file-name-audio {
+        #file-name-avatar {
             margin-top: 8px;
             font-style: italic;
-            color: #555;
             font-size: 0.9em;
-        }
-        #generator-view .qr-container {
-            margin-top: 2em;
             text-align: center;
         }
-        #generator-view #qrcode {
+        .qr-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5em;
+            padding: 1em;
+            background-color: rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        #qrcode {
             background: white;
             padding: 10px;
-            border: 2px solid var(--accent-color);
             border-radius: 8px;
-            display: inline-block;
-            min-height: 150px;
+            min-height: 200px;
+            min-width: 200px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        #generator-view #download-qr {
-            display: none;
-            margin-top: 1em;
-            color: var(--accent-color);
-            font-weight: bold;
-            text-decoration: none;
-        }
-        #generator-view #download-qr:hover { text-decoration: underline; }
-        #generator-view #preview-iframe {
-            width: 100%;
-            height: 700px;
-            border: 2px solid #c9b79c;
-            border-radius: 10px;
-            background-color: #fffcf2;
-        }
-        #generator-view .glowing-title { text-shadow: 0 0 8px var(--glow-color), 0 0 12px var(--glow-color); }
-        #generator-view .info-box {
-            font-size: 0.9em;
-            color: var(--accent-color);
-            background-color: #fffcf2;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #c9b79c;
-            margin-top: 1em;
-        }
-        @media (max-width: 1200px) {
-            #generator-view .container { grid-template-columns: 1fr; }
-            #generator-view #preview-iframe { height: 500px; }
-        }
+        #download-qr-btn { display: none; } /* Кнопка скрыта по умолчанию */
     </style>
 </head>
 <body>
 
     <!-- РЕЖИМ ГЕНЕРАТОРА (виден по умолчанию) -->
-    <div id="generator-view">
-        <div class="container">
-            <div class="panel editor-panel">
+    <div id="generator-view" class="editor-wrapper">
+        <div class="editor-container">
+            <div class="controls">
                 <h1>Магический QR</h1>
                 <div class="form-group">
-                    <label for="genially-url">1. Ссылка на вашу игру Genially:</label>
+                    <label for="genially-url">1. Ссылка на игру Genially:</label>
                     <input type="text" id="genially-url" placeholder="https://view.genial.ly/...">
                 </div>
                 <div class="form-group">
-                    <label for="avatar-upload">2. Загрузите Аватар (PNG/JPG):</label>
+                    <label for="avatar-upload">2. Аватар (PNG/JPG):</label>
                     <label for="avatar-upload" class="file-upload-label">Выбрать изображение</label>
                     <input type="file" id="avatar-upload" accept="image/png, image/jpeg" style="display:none;">
                     <div id="file-name-avatar">Файл не выбран</div>
                 </div>
                 <div class="form-group">
-                    <label for="audio-upload">3. Загрузите Приветствие (MP3):</label>
-                    <label for="audio-upload" class="file-upload-label">Выбрать аудиофайл</label>
-                    <input type="file" id="audio-upload" accept="audio/mpeg" style="display:none;">
-                    <div id="file-name-audio">Файл не выбран</div>
-                     <div class="info-box">
-                        <strong>Важно:</strong> Используйте небольшие файлы (картинка до 200Кб, аудио до 5-10 сек), чтобы QR-код легко сканировался.
-                    </div>
-                </div>
-                <button id="generate-qr-btn">Получить QR-код</button>
-                <div class="qr-container">
-                    <h2 class="glowing-title">Ваш QR-код</h2>
-                    <div id="qrcode">Ожидание генерации</div>
-                    <a href="#" id="download-qr" download="game-qr-code.png">Скачать QR-код</a>
-                </div>
-            </div>
-            <div class="panel preview-panel">
-                <h2>Предпросмотр</h2>
-                <iframe id="preview-iframe" title="Предпросмотр приветствия"></iframe>
-            </div>
-        </div>
-    </div>
-
-    <!-- РЕЖИМ ПЛЕЕРА (скрыт по умолчанию) -->
-    <div id="player-view" style="display: none;">
-        <img id="player-avatar" src="" alt="Аватар" style="display: none;">
-        <div class="loader"></div>
-    </div>
-
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    // Главная логика: проверяем, есть ли данные в URL
-    const hash = window.location.hash.substring(1);
-
-    if (hash) {
-        // --- РЕЖИМ ПЛЕЕРА ---
-        // Если в URL есть #..., значит, мы пришли со сканированного QR-кода.
-        
-        // 1. Переключаем вид
-        document.getElementById('generator-view').style.display = 'none';
-        document.getElementById('player-view').style.display = 'block';
-        document.body.classList.add('player-mode');
-        document.title = 'Загрузка игры...';
-
-        try {
-            // 2. Декодируем данные
-            const decodedData = atob(hash);
-            const params = JSON.parse(decodedData);
-
-            const geniallyUrl = params.g;
-            const avatarDataUrl = params.a;
-            const audioDataUrl = params.s;
-            
-            if (!geniallyUrl) { throw new Error("Не найдена ссылка на игру."); }
-
-            // 3. Показываем аватар (если он есть)
-            if (avatarDataUrl) {
-                const avatarImg = document.getElementById('player-avatar');
-                avatarImg.src = avatarDataUrl;
-                avatarImg.style.display = 'block';
-            }
-
-            // Функция для безопасного перехода на игру
-            const redirectToGame = (url) => {
-                document.body.style.opacity = '0';
-                setTimeout(() => { window.location.replace(url); }, 500);
-            };
-
-            // 4. Воспроизводим аудио (если оно есть), иначе сразу переходим
-            if (audioDataUrl) {
-                const audio = new Audio(audioDataUrl);
-                audio.play().then(() => {
-                    audio.addEventListener('ended', () => redirectToGame(geniallyUrl));
-                }).catch(error => {
-                    console.warn("Автовоспроизведение заблокировано. Переход к игре.", error);
-                    redirectToGame(geniallyUrl); // Если не удалось, все равно переходим
-                });
-            } else {
-                // Если аудио нет, переходим сразу
-                redirectToGame(geniallyUrl);
-            }
-
-        } catch (error) {
-            console.error("Ошибка при обработке QR-кода:", error);
-            document.body.innerHTML = `<div style="color: red; padding: 2em; text-align: center; font-size: 1.2em;">Ошибка: Не удалось загрузить данные игры. QR-код поврежден или некорректен.</div>`;
-        }
-
-    } else {
-        // --- РЕЖИМ ГЕНЕРАТОРА ---
-        // Если в URL нет #..., значит, пользователь открыл страницу для создания QR-кода.
-        
-        const geniallyUrlInput = document.getElementById('genially-url');
-        const avatarUpload = document.getElementById('avatar-upload');
-        const audioUpload = document.getElementById('audio-upload');
-        const previewIframe = document.getElementById('preview-iframe');
-        const qrcodeContainer = document.getElementById('qrcode');
-        const downloadLink = document.getElementById('download-qr');
-        const generateQrBtn = document.getElementById('generate-qr-btn');
-
-        let state = {
-            geniallyUrl: '',
-            avatarDataUrl: '',
-            audioDataUrl: ''
-        };
-        
-        // Функция генерации QR-кода
-        function generateAndShow() {
-            if (!state.geniallyUrl) {
-                alert("Пожалуйста, введите ссылку на игру Genially.");
-                return;
-            }
-            
-            const payload = { g: state.geniallyUrl };
-            if (state.avatarDataUrl) { payload.a = state.avatarDataUrl; }
-            if (state.audioDataUrl) { payload.s = state.audioDataUrl; }
-
-            const encodedPayload = btoa(JSON.stringify(payload));
-            
-            // Важно: QR-код ведет на эту же страницу, но с данными в hash
-            const baseUrl = window.location.href.split('#')[0];
-            const finalUrl = baseUrl + '#' + encodedPayload;
-
-            previewIframe.src = finalUrl;
-            renderQrToContainer(finalUrl);
-        }
-        
-        // Функция обработки загрузки файлов
-        function handleFileUpload(file, type) {
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if (type === 'avatar') {
-                    state.avatarDataUrl = e.target.result;
-                    document.getElementById('file-name-avatar').textContent = file.name;
-                } else if (type === 'audio') {
-                    state.audioDataUrl = e.target.result;
-                    document.getElementById('file-name-audio').textContent = file.name;
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-        
-        // Функция отрисовки QR-кода
-        function renderQrToContainer(url){
-            qrcodeContainer.innerHTML = '';
-            const qr = qrcode(0, 'M');
-            try {
-                qr.addData(url);
-                qr.make();
-                qrcodeContainer.innerHTML = qr.createImgTag(5, 8);
-
-                const qrImg = qrcodeContainer.querySelector('img');
-                if (qrImg) {
-                    downloadLink.href = qrImg.src;
-                    downloadLink.style.display = 'block';
-                }
-            } catch (e) {
-                console.error("Ошибка генерации QR:", e);
-                qrcodeContainer.innerHTML = "Слишком много данных для QR-кода. Уменьшите размер файлов.";
-                downloadLink.style.display = 'none';
-            }
-        }
-        
-        // Навешиваем обработчики событий
-        geniallyUrlInput.addEventListener('input', (e) => { state.geniallyUrl = e.target.value; });
-        avatarUpload.addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'avatar'));
-        audioUpload.addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'audio'));
-        generateQrBtn.addEventListener('click', generateAndShow);
-
-        // Начальное состояние предпросмотра
-        previewIframe.srcdoc = `<div style="text-align:center; padding: 2em; font-family: 'Cormorant Garamond', serif;">Заполните поля и нажмите "Получить QR-код"</div>`;
-    }
-});
-</script>
-
-</body>
-</html>
+                    <label for="greeting-text">3. Текст приветствия:</label>
+                    <textarea id="greeting-text" placeholder="Добро пожаловать в игру!"></textarea>
+                    <label for="language-select" style="margin-top: 1em;">Язык озвучки:</label>
+                    <select id="language-select">
+                        <option value="ru-RU">Русский</option>
+                        <option value="en-US
