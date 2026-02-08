@@ -37,7 +37,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #333; /* Темный фон для эмбиента */
+            background-color: #333;
             overflow: hidden;
             transition: opacity 0.5s ease-in-out;
         }
@@ -48,7 +48,7 @@
             justify-content: center;
             text-align: center;
             padding: 2em;
-            background: rgba(245, 238, 218, 0.95); /* Полупрозрачный фон пергамента */
+            background: rgba(245, 238, 218, 0.95);
             border-radius: 15px;
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
             max-width: 90%;
@@ -63,11 +63,7 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.2);
             margin-bottom: 20px;
         }
-        #greeting-message {
-            font-size: 1.5em;
-            margin-bottom: 1.5em;
-            line-height: 1.4;
-        }
+        #greeting-message { font-size: 1.5em; margin-bottom: 1.5em; line-height: 1.4; }
         #start-button {
             padding: 12px 30px;
             font-family: 'Cormorant Garamond', serif;
@@ -81,19 +77,16 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             transition: all 0.3s;
         }
-        #start-button:hover {
-            background-color: #4a3328;
-            transform: translateY(-2px);
-        }
+        #start-button:hover { background-color: #4a3328; transform: translateY(-2px); }
 
         /* --- Стили для режима ГЕНЕРАТОРА --- */
         #generator-view .container {
-            max-width: 1600px; /* Увеличена максимальная ширина */
+            max-width: 900px; /* Ограничиваем ширину для центрирования */
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: 500px 1fr; /* Изменено соотношение колонок */
+            display: flex; /* Изменено на flex */
+            flex-direction: column; /* Элементы идут друг под другом */
+            align-items: center; /* Центрирование по горизонтали */
             gap: 2em;
-            align-items: flex-start;
         }
         #generator-view .panel {
             background-color: var(--panel-bg);
@@ -101,6 +94,8 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 0 15px rgba(0,0,0,0.2);
             border: 3px solid var(--border-color);
+            width: 100%; /* Панели занимают всю ширину контейнера */
+            box-sizing: border-box;
         }
         #generator-view h1 {
             font-family: 'Marck Script', cursive;
@@ -108,11 +103,10 @@
             text-align: center;
             margin-top: 0;
             font-size: 3.5em;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
         }
         #generator-view .form-group {
-            margin-bottom: 1.5em;
-            padding: 1em;
+            margin-bottom: 1em; /* Уменьшен отступ */
+            padding: 0.8em; /* Уменьшен отступ */
             border-radius: 8px;
             border: 1px solid transparent;
             transition: all 0.3s ease-in-out;
@@ -121,12 +115,7 @@
             background-color: rgba(92, 64, 51, 0.05);
             border-color: rgba(92, 64, 51, 0.2);
         }
-        #generator-view label {
-            font-weight: 700;
-            display: block;
-            margin-bottom: 0.5em;
-            font-size: 1.1em;
-        }
+        #generator-view label { font-weight: 700; display: block; margin-bottom: 0.5em; font-size: 1.1em; }
         #generator-view input[type="text"], #generator-view textarea, #generator-view select {
             width: calc(100% - 24px);
             padding: 12px;
@@ -145,65 +134,39 @@
             border-radius: 5px;
             cursor: pointer;
             text-align: center;
-            transition: background-color 0.3s;
         }
-        #generator-view .file-upload-label:hover { background-color: #634b33; }
         #generator-view input[type="file"] { display: none; }
         #generator-view #generate-qr-btn, #generator-view #download-qr {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.2em;
-            font-weight: 700;
-            background-color: var(--button-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 1.5em;
-            transition: all 0.3s;
-            text-align: center;
-            text-decoration: none;
+            display: block; width: 100%; padding: 15px; font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2em; font-weight: 700; background-color: var(--button-color);
+            color: white; border: none; border-radius: 8px; cursor: pointer;
+            margin-top: 1.5em; transition: all 0.3s; text-align: center; text-decoration: none;
         }
         #generator-view #generate-qr-btn:hover, #generator-view #download-qr:hover {
-            background-color: #4a3328;
-            transform: translateY(-2px);
+            background-color: #4a3328; transform: translateY(-2px);
+        }
+        .info-box {
+            font-size: 0.9em; color: var(--accent-color); background-color: #fffcf2;
+            padding: 10px; border-radius: 5px; border: 1px solid #c9b79c; margin-top: 1em;
         }
         #generator-view #file-name-avatar { margin-top: 8px; font-style: italic; color: #555; }
         #generator-view .qr-container { margin-top: 2em; text-align: center; }
         #generator-view #qrcode {
-            background: white;
-            padding: 15px;
-            border: 2px solid var(--accent-color);
-            border-radius: 8px;
-            display: inline-block;
-            min-height: 150px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: white; padding: 15px; border: 2px solid var(--accent-color);
+            border-radius: 8px; display: inline-flex; min-height: 150px;
+            align-items: center; justify-content: center;
         }
         #generator-view #download-qr { display: none; background-color: var(--accent-color); }
-        #generator-view #download-qr:hover { background-color: #634b33; }
         #generator-view .preview-container {
-            width: 100%;
-            aspect-ratio: 16 / 9; /* Соотношение сторон 16:9 */
-            border: 10px solid #3d2b1f;
-            border-radius: 20px;
-            background-color: #3d2b1f;
-            overflow: hidden;
+            width: 100%; aspect-ratio: 16 / 9; border: 10px solid #3d2b1f;
+            border-radius: 20px; background-color: #3d2b1f; overflow: hidden;
             box-shadow: 0 5px 25px rgba(0,0,0,0.3);
         }
         #generator-view #preview-iframe { width: 100%; height: 100%; border: none; }
-        
-        @media (max-width: 1200px) {
-            #generator-view .container { grid-template-columns: 1fr; }
-        }
     </style>
 </head>
 <body>
 
-    <!-- РЕЖИМ ГЕНЕРАТОРА (виден по умолчанию) -->
     <div id="generator-view">
         <div class="container">
             <div class="panel editor-panel">
@@ -217,18 +180,21 @@
                     <label for="avatar-upload" class="file-upload-label">Выбрать изображение</label>
                     <input type="file" id="avatar-upload" accept="image/png, image/jpeg">
                     <div id="file-name-avatar">Файл не выбран</div>
+                    <div class="info-box">Изображение будет автоматически сжато для корректной работы QR-кода.</div>
                 </div>
                 <div class="form-group">
-                    <label for="greeting-text">3. Введите текст приветствия:</label>
-                    <textarea id="greeting-text" placeholder="Добро пожаловать, искатель приключений!"></textarea>
-                    <label for="voice-lang" style="margin-top: 1em;">Язык озвучки:</label>
+                    <label for="voice-lang">3. Язык озвучки:</label>
                     <select id="voice-lang">
                         <option value="ru-RU" selected>Русский</option>
                         <option value="en-US">Английский</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="button-lang">4. Язык кнопки:</label>
+                    <label for="greeting-text">4. Введите текст приветствия:</label>
+                    <textarea id="greeting-text" placeholder="Добро пожаловать, искатель приключений!"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="button-lang">5. Язык кнопки:</label>
                     <select id="button-lang">
                         <option value="ru" selected>Русский (Начать)</option>
                         <option value="en">Английский (Start)</option>
@@ -250,7 +216,6 @@
         </div>
     </div>
 
-    <!-- РЕЖИМ ПЛЕЕРА (скрыт по умолчанию) -->
     <div id="player-view" style="display: none;">
          <div id="greeting-screen" style="display: none;">
             <img id="player-avatar" src="" alt="Аватар" style="display: none;">
@@ -272,14 +237,8 @@ document.addEventListener("DOMContentLoaded", () => {
         document.title = 'Загрузка...';
 
         try {
-            const decodedData = atob(hash);
-            const params = JSON.parse(decodedData);
-
-            const geniallyUrl = params.g;
-            const avatarDataUrl = params.a;
-            const greetingText = params.t;
-            const voiceLang = params.l;
-            const buttonLang = params.b;
+            const params = JSON.parse(atob(hash));
+            const { g: geniallyUrl, a: avatarDataUrl, t: greetingText, l: voiceLang, b: buttonLang } = params;
             
             if (!geniallyUrl) { throw new Error("Не найдена ссылка на игру."); }
 
@@ -288,15 +247,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const messageDiv = document.getElementById('greeting-message');
             const startButton = document.getElementById('start-button');
             
-            // Наполняем контентом экран приветствия
             if (avatarDataUrl) {
                 avatarImg.src = avatarDataUrl;
                 avatarImg.style.display = 'block';
             }
             messageDiv.innerText = greetingText || "Добро пожаловать!";
             startButton.innerText = (buttonLang === 'en') ? 'Start' : 'Начать';
-            
-            // Показываем экран приветствия
             greetingScreen.style.display = 'flex';
             
             const redirectToGame = (url) => {
@@ -306,19 +262,14 @@ document.addEventListener("DOMContentLoaded", () => {
             
             startButton.addEventListener('click', () => redirectToGame(geniallyUrl));
 
-            // Озвучиваем текст, если он есть
             if (greetingText && voiceLang && 'speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(greetingText);
                 utterance.lang = voiceLang;
-                // Небольшая задержка для совместимости
-                setTimeout(() => {
-                    window.speechSynthesis.speak(utterance);
-                }, 100);
+                setTimeout(() => window.speechSynthesis.speak(utterance), 100);
             }
-
         } catch (error) {
             console.error("Ошибка при обработке QR-кода:", error);
-            document.body.innerHTML = `<div style="color: red; padding: 2em; text-align: center; font-size: 1.2em;">Ошибка: QR-код поврежден или некорректен.</div>`;
+            document.body.innerHTML = `<div style="color:red;padding:2em;text-align:center;font-size:1.2em;">Ошибка: QR-код поврежден или некорректен.</div>`;
         }
 
     } else {
@@ -334,11 +285,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const generateQrBtn = document.getElementById('generate-qr-btn');
 
         let state = {
-            geniallyUrl: '',
-            avatarDataUrl: '',
-            greetingText: '',
-            voiceLang: 'ru-RU',
-            buttonLang: 'ru'
+            geniallyUrl: '', avatarDataUrl: '', greetingText: '',
+            voiceLang: 'ru-RU', buttonLang: 'ru'
         };
         
         function generateAndShow() {
@@ -347,34 +295,57 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
             
-            const payload = { g: state.geniallyUrl };
-            if (state.avatarDataUrl) { payload.a = state.avatarDataUrl; }
-            if (state.greetingText) { 
-                payload.t = state.greetingText;
-                payload.l = state.voiceLang;
-            }
-            payload.b = state.buttonLang;
-
+            const payload = {
+                g: state.geniallyUrl,
+                a: state.avatarDataUrl,
+                t: state.greetingText,
+                l: state.voiceLang,
+                b: state.buttonLang
+            };
+            
             const encodedPayload = btoa(JSON.stringify(payload));
             const baseUrl = window.location.href.split('#')[0];
-            const finalUrl = baseUrl + '#' + encodedPayload;
+            const finalUrl = `${baseUrl}#${encodedPayload}`;
 
-            // Обновляем предпросмотр - это ключевой момент для исправления
             previewIframe.src = finalUrl;
             renderQrToContainer(finalUrl);
         }
         
         function handleAvatarUpload(file) {
             if (!file) return;
-            if (file.size > 200 * 1024) { // 200Кб
-                alert("Файл аватара слишком большой! Пожалуйста, используйте изображение до 200Кб.");
-                avatarUpload.value = "";
-                return;
-            }
+
             const reader = new FileReader();
             reader.onload = (e) => {
-                state.avatarDataUrl = e.target.result;
-                document.getElementById('file-name-avatar').textContent = file.name;
+                const img = new Image();
+                img.onload = () => {
+                    const MAX_WIDTH = 400;
+                    const MAX_HEIGHT = 400;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Конвертируем в JPEG с качеством 0.8 для лучшего сжатия
+                    state.avatarDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById('file-name-avatar').textContent = file.name + ' (сжато)';
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
@@ -385,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 qr.addData(url);
                 qr.make();
-                qrcodeContainer.innerHTML = qr.createImgTag(5, 8); // scale=5, margin=8px
+                qrcodeContainer.innerHTML = qr.createImgTag(5, 8);
 
                 const qrImg = qrcodeContainer.querySelector('img');
                 if (qrImg) {
@@ -394,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             } catch (e) {
                 console.error("Ошибка генерации QR:", e);
-                qrcodeContainer.innerHTML = "Слишком много данных для QR-кода. Уменьшите текст или размер аватара.";
+                qrcodeContainer.innerHTML = "Слишком много данных для QR-кода. Уменьшите текст.";
                 downloadLink.style.display = 'none';
             }
         }
@@ -406,7 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
         buttonLangSelect.addEventListener('change', (e) => { state.buttonLang = e.target.value; });
         generateQrBtn.addEventListener('click', generateAndShow);
 
-        previewIframe.srcdoc = `<div style="display:flex; align-items:center; justify-content:center; height:100%; text-align:center; padding: 2em; font-family: 'Cormorant Garamond', serif; font-size: 1.2em; color: #5c4033;">Предпросмотр появится здесь после генерации QR-кода</div>`;
+        previewIframe.srcdoc = `<div style="display:flex;align-items:center;justify-content:center;height:100%;text-align:center;padding:2em;font-family:'Cormorant Garamond',serif;font-size:1.2em;color:#5c4033;">Предпросмотр появится здесь после генерации QR-кода</div>`;
     }
 });
 </script>
