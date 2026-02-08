@@ -122,6 +122,10 @@
             border: 2px solid var(--accent-color);
             border-radius: 8px;
             display: inline-block;
+            min-height: 100px; /* Added for placeholder */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #download-qr {
@@ -213,6 +217,7 @@
 
         if (!geniallyUrl) {
             previewIframe.srcdoc = `<div style="text-align:center; padding: 2em; font-family: 'Cormorant Garamond', serif;">Введите ссылку на игру, чтобы начать</div>`;
+            generateQrCode();
             return;
         }
 
@@ -266,35 +271,48 @@
         reader.readAsDataURL(file);
     }
     
+    // --- ИЗМЕНЕННАЯ ФУНКЦИЯ ---
     function generateQrCode() {
-        const { geniallyUrl, avatarDataUrl, audioDataUrl } = state;
+        const { geniallyUrl } = state;
         if (!geniallyUrl) {
             qrcodeContainer.innerHTML = 'Введите ссылку на игру';
             downloadLink.style.display = 'none';
             return;
-        };
+        }
 
         const finalHtml = previewIframe.srcdoc;
         
-        // Используем сервис для хостинга HTML-кода
-        const jsDoLink = 'https://js.do/api/create-bin';
-        const formData = new FormData();
-        formData.append('html', finalHtml);
-
+        // Используем новый, более надежный сервис для хостинга HTML
+        const apiUrl = 'https://bin.vercel.app/api/v1/bins';
+        
         qrcodeContainer.innerHTML = 'Генерация...';
         
-        fetch(jsDoLink, { method: 'POST', body: formData })
-            .then(response => response.json())
+        fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "html": finalHtml
+                }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
-                if (data.url) {
-                    renderQrToContainer(data.url);
+                if (data.id) {
+                    const splashUrl = `https://bin.vercel.app/${data.id}`;
+                    renderQrToContainer(splashUrl);
                 } else {
-                    qrcodeContainer.innerHTML = 'Ошибка генерации ссылки.';
+                    qrcodeContainer.innerHTML = 'Ошибка: не удалось создать ссылку.';
                 }
             })
             .catch(err => {
                 console.error('API Error:', err);
-                qrcodeContainer.innerHTML = 'Сетевая ошибка.';
+                qrcodeContainer.innerHTML = 'Сетевая ошибка. Попробуйте снова.';
             });
     }
     
@@ -314,10 +332,18 @@
         }
     }
 
+    // Debounce function to avoid too many API calls
+    let debounceTimer;
+    function debouncedUpdate() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            updatePreview();
+        }, 500); // Wait 500ms after user stops typing
+    }
 
     geniallyUrlInput.addEventListener('input', (e) => {
         state.geniallyUrl = e.target.value;
-        updatePreview();
+        debouncedUpdate();
     });
 
     avatarUpload.addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'avatar'));
@@ -329,4 +355,3 @@
 </script>
 </body>
 </html>
-
