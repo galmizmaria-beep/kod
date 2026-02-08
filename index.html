@@ -17,6 +17,7 @@
             --title-color: #5c4033;
             --accent-color: #7a5c3e;
             --glow-color: #ffee77;
+            --button-color: #5c4033;
         }
 
         body {
@@ -102,6 +103,28 @@
         
         .file-upload-wrapper input[type="file"] {
             display: none;
+        }
+        
+        #generate-qr-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2em;
+            font-weight: 700;
+            background-color: var(--button-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 1.5em;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        
+        #generate-qr-btn:hover {
+            background-color: #4a3328;
+            transform: translateY(-2px);
         }
 
         #file-name-avatar, #file-name-audio {
@@ -197,6 +220,8 @@
                     <strong>Важно:</strong> Используйте небольшие файлы (картинка до 200Кб, аудио до 5-10 сек), чтобы QR-код легко сканировался.
                 </div>
             </div>
+            
+            <button id="generate-qr-btn">Получить QR-код</button>
 
             <div class="qr-container">
                 <h2 class="glowing-title">Ваш QR-код</h2>
@@ -218,6 +243,7 @@
     const previewIframe = document.getElementById('preview-iframe');
     const qrcodeContainer = document.getElementById('qrcode');
     const downloadLink = document.getElementById('download-qr');
+    const generateQrBtn = document.getElementById('generate-qr-btn');
 
     // Ссылка на универсальный "плеер", который будет отображать приветствие
     const PLAYER_URL = "https://gist.githack.com/TheGreatUser/1f692055117498369399e71b12b54203/raw/magic-qr-player.html";
@@ -228,20 +254,9 @@
         audioDataUrl: ''
     };
     
-    // Debounce function to avoid too many updates
-    let debounceTimer;
-    function debouncedUpdate() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            updatePreviewAndQr();
-        }, 500);
-    }
-
-    function updatePreviewAndQr() {
+    function generateAndShow() {
         if (!state.geniallyUrl) {
-            previewIframe.srcdoc = `<div style="text-align:center; padding: 2em; font-family: 'Cormorant Garamond', serif;">Введите ссылку на игру, чтобы начать</div>`;
-            qrcodeContainer.innerHTML = 'Введите ссылку на игру';
-            downloadLink.style.display = 'none';
+            alert("Пожалуйста, введите ссылку на игру Genially.");
             return;
         }
         
@@ -275,7 +290,6 @@
                 state.audioDataUrl = e.target.result;
                 document.getElementById('file-name-audio').textContent = file.name;
             }
-            debouncedUpdate();
         };
         reader.readAsDataURL(file);
     }
@@ -303,16 +317,20 @@
         }
     }
 
+    // --- НАЗНАЧЕНИЕ СОБЫТИЙ ---
     geniallyUrlInput.addEventListener('input', (e) => {
         state.geniallyUrl = e.target.value;
-        debouncedUpdate();
     });
 
     avatarUpload.addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'avatar'));
     audioUpload.addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'audio'));
 
-    // Initial call
-    updatePreviewAndQr();
+    // Главное событие - клик по кнопке
+    generateQrBtn.addEventListener('click', generateAndShow);
+
+    // Initial state
+    previewIframe.srcdoc = `<div style="text-align:center; padding: 2em; font-family: 'Cormorant Garamond', serif;">Заполните поля и нажмите "Получить QR-код"</div>`;
+    qrcodeContainer.innerHTML = 'Ожидание генерации';
 
 </script>
 </body>
