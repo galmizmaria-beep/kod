@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор QR-Квестов для Genially</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .editor-panel, .preview-panel { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1, h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .station { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; background: #fafafa; }
+        .station h3 { margin-top: 0; }
+        label { display: block; font-weight: bold; margin-top: 10px; }
+        input[type="text"], textarea { width: 95%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-top: 5px; }
+        button { background-color: #3498db; color: #fff; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; transition: background-color 0.3s; }
+        button:hover { background-color: #2980b9; }
+        #add-station { background-color: #2ecc71; }
+        #add-station:hover { background-color: #27ae60; }
+        .qr-code-container { margin-top: 10px; }
+        .qr-code-container canvas { border: 1px solid #ddd; }
+        #preview-iframe { width: 100%; height: 500px; border: 1px solid #ccc; border-radius: 5px; }
+        #generated-output { margin-top: 20px; }
+        #generated-output textarea { width: 95%; height: 150px; font-family: monospace; }
+        #generated-link-container { display: none; margin-top: 15px; }
+        #generated-link { font-weight: bold; color: #e67e22; }
+    </style>
+    <!-- Подключаем библиотеки для QR-кодов и генерации ссылки -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <!-- ПАНЕЛЬ РЕДАКТОРА -->
+        <div class="editor-panel">
+            <h1>Редактор QR-Квестов</h1>
+            <div id="stations-list">
+                <!-- Станции будут добавляться сюда -->
+            </div>
+            <button id="add-station">+ Добавить станцию</button>
+            <hr>
+            <h2>3. Генерация кода для Genially</h2>
+            <button id="generate-code">Сгенерировать код и ссылку</button>
+            
+            <div id="generated-output">
+                <label for="html-code">Код для вставки (HTML):</label>
+                <textarea id="html-code" readonly placeholder="Здесь появится HTML-код вашей игры..."></textarea>
+                <div id="generated-link-container">
+                    <label for="iframe-link">Готовая ссылка для <iframe> в Genially:</label>
+                    <input type="text" id="iframe-link" readonly>
+                    <p>Скопируйте эту ссылку и вставьте в Genially через "Вставить" -> "Другие".</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ПАНЕЛЬ ПРЕДПРОСМОТРА -->
+        <div class="preview-panel">
+            <h2>Предпросмотр игры</h2>
+            <p>Предпросмотр будет обновляться автоматически при изменении данных.</p>
+            <iframe id="preview-iframe" title="Предпросмотр игры"></iframe>
+        </div>
+    </div>
+
+<script>
+let stationCounter = 0;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const addStationBtn = document.getElementById('add-station');
+    const stationsList = document.getElementById('stations-list');
+    const generateCodeBtn = document.getElementById('generate-code');
+    const htmlCodeTextarea = document.getElementById('html-code');
+    const previewIframe = document.getElementById('preview-iframe');
+    const iframeLinkInput = document.getElementById('iframe-link');
+    const generatedLinkContainer = document.getElementById('generated-link-container');
+
+    // --- Управление станциями ---
+    function createStationElement() {
+        stationCounter++;
+        const stationId = `station_${stationCounter}`;
+        const stationDiv = document.createElement('div');
+        stationDiv.className = 'station';
+        stationDiv.id = `editor_${stationId}`;
+        stationDiv.innerHTML = `
+            <h3>Станция #${stationCounter} (ID: ${stationId})</h3>
+            <label for="title_${stationId}">Заголовок:</label>
+            <input type="text" id="title_${stationId}" placeholder="Врата в Долину Царей" data-field="title">
+            
+            <label for="description_${stationId}">Текст/История:</label>
+            <textarea id="description_${stationId}" rows="3" placeholder="Вы стоите перед..." data-field="description"></textarea>
+            
+            <label for="image_${stationId}">Изображение:</label>
+            <input type="file" id="image_${stationId}" accept="image/*" data-field="image">
+            <img id="preview_image_${stationId}" src="" alt="превью" style="max-width: 100px; display: none;">
+            <input type="hidden" id="imagedata_${stationId}" data-field="imageData">
+
+            <label for="question_${stationId}">Вопрос (необязательно):</label>
+            <input type="text" id="question_${stationId}" placeholder="Какой бог с головой шакала...?" data-field="question">
+            
+            <label for="answer_${stationId}">Правильный ответ:</label>
+            <input type="text" id="answer_${stationId}" placeholder="Анубис" data-field="answer">
+
+            <div class="qr-code-container">
+                <label>QR-код для этой станции:</label>
+                <div id="qr_${stationId}"></div>
+                <p><small>Наведите камеру телефона на этот QR-код для теста.</small></p>
+            </div>
+        `;
+        stationsList.appendChild(stationDiv);
+        generateQrCode(stationId);
+
+        // Обновление предпросмотра при изменении
+        stationDiv.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('input', updatePreview);
+            input.addEventListener('change', updatePreview);
+        });
+        
+        stationDiv.querySelector('input[type="file"]').addEventListener('change', function(event){
+            handleImageUpload(event, stationId);
+        });
+    }
+
+    function handleImageUpload(event, stationId) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById(`preview_image_${stationId}`).src = e.target.result;
+            document.getElementById(`preview_image_${stationId}`).style.display = 'block';
+            document.getElementById(`imagedata_${stationId}`).value = e.target.result;
+            updatePreview();
+        }
+        reader.readAsDataURL(file);
+    }
+    
+    function generateQrCode(stationId) {
+        const qrContainer = document.getElementById(`qr_${stationId}`);
+        qrContainer.innerHTML = ''; // Очищаем старый код
+        const typeNumber = 4;
+        const errorCorrectionLevel = 'L';
+        const qr = qrcode(typeNumber, errorCorrectionLevel);
+        qr.addData(stationId);
+        qr.make();
+        qrContainer.innerHTML = qr.createImgTag(4);
+    }
+
+    addStationBtn.addEventListener('click', createStationElement);
+    generateCodeBtn.addEventListener('click', generateFinalCode);
+
+    // --- Генерация и предпросмотр ---
+    function collectGameData() {
+        const gameData = {};
+        const stationElements = document.querySelectorAll('.station');
+        stationElements.forEach(stationDiv => {
+            const stationId = stationDiv.id.replace('editor_', '');
+            const stationObject = {};
+            stationDiv.querySelectorAll('[data-field]').forEach(field => {
+                const fieldName = field.dataset.field;
+                stationObject[fieldName] = field.value;
+            });
+            gameData[stationId] = stationObject;
+        });
+        return gameData;
+    }
+
+    function updatePreview() {
+        const gameData = collectGameData();
+        const gameHtml = generateGameHtml(gameData);
+        previewIframe.srcdoc = gameHtml;
+    }
+
+    function generateFinalCode() {
+        const gameData = collectGameData();
+        const gameHtml = generateGameHtml(gameData);
+        htmlCodeTextarea.value = gameHtml;
+        
+        // Преобразуем код в ссылку с помощью js.do
+        // Это внешний сервис, он может быть недоступен, но для прототипа идеально.
+        generatedLinkContainer.style.display = 'block';
+        iframeLinkInput.value = "Генерирую ссылку...";
+
+        try {
+            const blob = new Blob([gameHtml], {type : 'text/html'});
+            const url = URL.createObjectURL(blob);
+            
+            // js.do - это хак, он не всегда стабилен, но для простоты - лучший вариант
+            // Он берет HTML-код и хостит его
+            const jsDoLink = 'https://js.do/api/create-bin';
+            const formData = new FormData();
+            formData.append('html', gameHtml);
+            formData.append('css', '');
+            formData.append('js', '');
+
+            fetch(jsDoLink, { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.url) {
+                        iframeLinkInput.value = data.url;
+                    } else {
+                        iframeLinkInput.value = "Ошибка: не удалось создать ссылку.";
+                    }
+                })
+                .catch(err => {
+                    iframeLinkInput.value = "Ошибка сети при создании ссылки.";
+                    console.error('Fetch Error:', err);
+                });
+
+        } catch (e) {
+            iframeLinkInput.value = "Ошибка при создании ссылки.";
+            console.error(e);
+        }
+    }
+    
+    // --- Шаблон самой игры ---
+    function generateGameHtml(gameData) {
+        const gameDataString = JSON.stringify(gameData);
+        
+        // Весь HTML-код игры генерируется здесь одной строкой
+        return `
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Квест</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; background: #2c3e50; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; box-sizing: border-box; }
+        .game-wrapper { width: 100%; max-width: 500px; background: #34495e; padding: 20px; border-radius: 10px; text-align: center; }
+        #qr-reader { width: 100%; border: 2px dashed #95a5a6; border-radius: 8px; overflow: hidden; }
+        #station-content h1 { color: #f1c40f; }
+        #station-content img { max-width: 100%; border-radius: 5px; margin: 15px 0; }
+        .hidden { display: none; }
+        input { padding: 10px; width: 80%; border-radius: 5px; border: none; margin: 10px 0; }
+        button { background: #e67e22; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #d35400; }
+        #feedback { margin-top: 10px; font-weight: bold; }
+    </style>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"><\/script>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div id="scanner-view">
+            <h2>Наведите камеру на QR-код</h2>
+            <div id="qr-reader"></div>
+        </div>
+        <div id="station-view" class="hidden">
+            <div id="station-content">
+                <h1 id="station-title"></h1>
+                <img id="station-image" src="" alt="Изображение станции">
+                <p id="station-description"></p>
+                <div id="task-container">
+                    <p id="station-question"></p>
+                    <input type="text" id="user-answer" placeholder="Введите ваш ответ">
+                    <button id="submit-answer">Ответить</button>
+                    <p id="feedback"></p>
+                </div>
+            </div>
+            <button id="next-scan-button" class="hidden">Искать следующий QR-код</button>
+        </div>
+    </div>
+<script>
+    const gameData = ${gameDataString};
+    const scannerView = document.getElementById('scanner-view');
+    const stationView = document.getElementById('station-view');
+    const feedbackEl = document.getElementById('feedback');
+    let currentStationId = null;
+
+    function onScanSuccess(decodedText) {
+        if (gameData[decodedText]) {
+            currentStationId = decodedText;
+            displayStation(currentStationId);
+            html5QrcodeScanner.clear();
+        } else {
+            alert("Неизвестный QR-код!");
+        }
+    }
+
+    function displayStation(stationId) {
+        const station = gameData[stationId];
+        document.getElementById('station-title').textContent = station.title;
+        document.getElementById('station-description').textContent = station.description;
+        const imgEl = document.getElementById('station-image');
+        if (station.imageData) {
+            imgEl.src = station.imageData;
+            imgEl.style.display = 'block';
+        } else {
+            imgEl.style.display = 'none';
+        }
+        
+        const taskContainer = document.getElementById('task-container');
+        if (station.question) {
+            taskContainer.style.display = 'block';
+            document.getElementById('station-question').textContent = station.question;
+            document.getElementById('user-answer').value = '';
+            feedbackEl.textContent = '';
+        } else {
+            taskContainer.style.display = 'none';
+            document.getElementById('next-scan-button').classList.remove('hidden');
+        }
+        
+        scannerView.classList.add('hidden');
+        stationView.classList.remove('hidden');
+    }
+
+    document.getElementById('submit-answer').addEventListener('click', () => {
+        const station = gameData[currentStationId];
+        const userAnswer = document.getElementById('user-answer').value.trim();
+        if (userAnswer.toLowerCase() === station.answer.toLowerCase()) {
+            feedbackEl.textContent = "Правильно!";
+            feedbackEl.style.color = '#2ecc71';
+            document.getElementById('next-scan-button').classList.remove('hidden');
+        } else {
+            feedbackEl.textContent = "Неверно, попробуй еще раз.";
+            feedbackEl.style.color = '#e74c3c';
+        }
+    });
+
+    document.getElementById('next-scan-button').addEventListener('click', () => {
+        stationView.classList.add('hidden');
+        scannerView.classList.remove('hidden');
+        document.getElementById('next-scan-button').classList.add('hidden');
+        html5QrcodeScanner.render(onScanSuccess, (error) => {});
+    });
+
+    const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: {width: 250, height: 250} });
+    html5QrcodeScanner.render(onScanSuccess, (error) => {});
+<\/script>
+</body>
+</html>
+        `;
+    }
+
+    // Инициализация первой станции
+    createStationElement();
+    updatePreview();
+});
+</script>
+
+</body>
+</html>
