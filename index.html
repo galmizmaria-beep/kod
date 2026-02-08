@@ -245,8 +245,6 @@
     const downloadLink = document.getElementById('download-qr');
     const generateQrBtn = document.getElementById('generate-qr-btn');
 
-    // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-    // Ссылка на НОВЫЙ, исправленный "плеер", который гарантированно работает.
     const PLAYER_URL = "https://gist.githack.com/TheGreatUser/e596a51708dfc382151614f1146c2451/raw/magic-qr-player-v2.html";
 
     let state = {
@@ -255,26 +253,35 @@
         audioDataUrl: ''
     };
     
+    // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
+    // Эта функция была исправлена. Теперь она не добавляет аватар или аудио в QR-код,
+    // если они не были выбраны, что решает проблему с "зависанием" плеера.
     function generateAndShow() {
         if (!state.geniallyUrl) {
             alert("Пожалуйста, введите ссылку на игру Genially.");
             return;
         }
         
-        // 1. Создаем объект с данными
+        // 1. Создаем объект с данными, начиная с обязательного поля (ссылка на игру)
         const payload = {
-            g: state.geniallyUrl,
-            a: state.avatarDataUrl,
-            s: state.audioDataUrl
+            g: state.geniallyUrl
         };
 
-        // 2. Превращаем объект в строку JSON, затем кодируем в Base64, чтобы безопасно передать в URL
+        // 2. Условно добавляем аватар и аудио, только если они были загружены.
+        if (state.avatarDataUrl) {
+            payload.a = state.avatarDataUrl;
+        }
+        if (state.audioDataUrl) {
+            payload.s = state.audioDataUrl;
+        }
+
+        // 3. Превращаем объект в строку JSON, затем кодируем в Base64
         const encodedPayload = btoa(JSON.stringify(payload));
         
-        // 3. Создаем финальную ссылку, добавляя закодированные данные после #
+        // 4. Создаем финальную ссылку, добавляя закодированные данные после #
         const finalUrl = PLAYER_URL + '#' + encodedPayload;
 
-        // 4. Обновляем предпросмотр и генерируем QR-код
+        // 5. Обновляем предпросмотр и генерируем QR-код
         previewIframe.src = finalUrl;
         renderQrToContainer(finalUrl);
     }
