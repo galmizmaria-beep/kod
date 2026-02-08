@@ -122,7 +122,7 @@
             border: 2px solid var(--accent-color);
             border-radius: 8px;
             display: inline-block;
-            min-height: 100px; /* Added for placeholder */
+            min-height: 100px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -211,15 +211,18 @@
         avatarDataUrl: '',
         audioDataUrl: ''
     };
+    
+    // Debounce function to avoid too many updates
+    let debounceTimer;
+    function debouncedUpdate() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            updatePreviewAndQr();
+        }, 500); // Wait 500ms after user stops typing/uploading
+    }
 
-    function updatePreview() {
+    function updatePreviewAndQr() {
         const { geniallyUrl, avatarDataUrl, audioDataUrl } = state;
-
-        if (!geniallyUrl) {
-            previewIframe.srcdoc = `<div style="text-align:center; padding: 2em; font-family: 'Cormorant Garamond', serif;">Введите ссылку на игру, чтобы начать</div>`;
-            generateQrCode();
-            return;
-        }
 
         const htmlContent = `
             <!DOCTYPE html>
@@ -250,8 +253,13 @@
             </html>
         `;
 
-        previewIframe.srcdoc = htmlContent;
-        generateQrCode();
+        if (!geniallyUrl) {
+            previewIframe.srcdoc = `<div style="text-align:center; padding: 2em; font-family: 'Cormorant Garamond', serif;">Введите ссылку на игру, чтобы начать</div>`;
+        } else {
+             previewIframe.srcdoc = htmlContent;
+        }
+       
+        generateQrCode(htmlContent);
     }
     
     function handleFileUpload(file, type) {
@@ -266,13 +274,13 @@
                 state.audioDataUrl = e.target.result;
                  document.getElementById('file-name-audio').textContent = file.name;
             }
-            updatePreview();
+            debouncedUpdate();
         };
         reader.readAsDataURL(file);
     }
     
-    // --- ИЗМЕНЕННАЯ ФУНКЦИЯ ---
-    function generateQrCode() {
+    // --- ПОЛНОСТЬЮ ПЕРЕПИСАННАЯ ФУНКЦИЯ ГЕНЕРАЦИИ QR-КОДА ---
+    function generateQrCode(htmlContent) {
         const { geniallyUrl } = state;
         if (!geniallyUrl) {
             qrcodeContainer.innerHTML = 'Введите ссылку на игру';
@@ -280,65 +288,51 @@
             return;
         }
 
-        const finalHtml = previewIframe.srcdoc;
-        
-        // Используем новый, более надежный сервис для хостинга HTML
-        const apiUrl = 'https://bin.vercel.app/api/v1/bins';
-        
         qrcodeContainer.innerHTML = 'Генерация...';
-        
-        fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    "html": finalHtml
-                }),
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.id) {
-                    const splashUrl = `https://bin.vercel.app/${data.id}`;
-                    renderQrToContainer(splashUrl);
-                } else {
-                    qrcodeContainer.innerHTML = 'Ошибка: не удалось создать ссылку.';
-                }
-            })
-            .catch(err => {
-                console.error('API Error:', err);
-                qrcodeContainer.innerHTML = 'Сетевая ошибка. Попробуйте снова.';
-            });
+
+        try {
+            // 1. Кодируем весь HTML-код для безопасной передачи в URL
+            const encodedHtml = encodeURIComponent(htmlContent);
+            const dataUrl = `data:text/html;charset=utf-8,${encodedHtml}`;
+
+            // 2. Предупреждение о длине, если она становится слишком большой
+            if (dataUrl.length > 4000) {
+                 console.warn(`ВНИМАНИЕ: Сгенерированный URL очень длинный (${dataUrl.length} символов). QR-код может быть сложным для сканирования. Рекомендуется использовать файлы меньшего размера.`);
+                 qrcodeContainer.innerHTML = 'QR-код слишком плотный. Используйте файлы меньшего размера.';
+                 return;
+            }
+            
+            // 3. Передаем готовый URL в функцию рендеринга QR-кода
+            renderQrToContainer(dataUrl);
+
+        } catch (err) {
+            console.error('Ошибка при создании Data URL:', err);
+            qrcodeContainer.innerHTML = 'Ошибка кодирования данных.';
+            downloadLink.style.display = 'none';
+        }
     }
     
     function renderQrToContainer(url){
         qrcodeContainer.innerHTML = '';
         const typeNumber = 0; // auto
-        const errorCorrectionLevel = 'L';
+        const errorCorrectionLevel = 'H'; // 'H' for high - лучше для плотных кодов
         const qr = qrcode(typeNumber, errorCorrectionLevel);
-        qr.addData(url);
-        qr.make();
-        qrcodeContainer.innerHTML = qr.createImgTag(6, 4); // size 6, margin 4
+        
+        try {
+            qr.addData(url);
+            qr.make();
+            qrcodeContainer.innerHTML = qr.createImgTag(5, 8); // size 5, margin 8
 
-        const qrImg = qrcodeContainer.querySelector('img');
-        if(qrImg) {
-            downloadLink.href = qrImg.src;
-            downloadLink.style.display = 'block';
+            const qrImg = qrcodeContainer.querySelector('img');
+            if(qrImg) {
+                downloadLink.href = qrImg.src;
+                downloadLink.style.display = 'block';
+            }
+        } catch (e) {
+            console.error("Ошибка генерации QR:", e);
+            qrcodeContainer.innerHTML = "Слишком много данных для QR-кода. Уменьшите размер файлов.";
+            downloadLink.style.display = 'none';
         }
-    }
-
-    // Debounce function to avoid too many API calls
-    let debounceTimer;
-    function debouncedUpdate() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            updatePreview();
-        }, 500); // Wait 500ms after user stops typing
     }
 
     geniallyUrlInput.addEventListener('input', (e) => {
@@ -350,7 +344,7 @@
     audioUpload.addEventListener('change', (e) => handleFileUpload(e.target.files[0], 'audio'));
 
     // Initial call
-    updatePreview();
+    updatePreviewAndQr();
 
 </script>
 </body>
